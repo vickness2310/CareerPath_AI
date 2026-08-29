@@ -1,3 +1,9 @@
+
+
+https://github.com/user-attachments/assets/a49af339-ee85-4605-9f1d-881d3f971921
+
+
+
 CareerPath AI 🧭 (📋 Assignment Project)
 
 AI-Powered Career Recommendation System for Malaysian Students
