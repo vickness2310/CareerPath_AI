@@ -85,3 +85,8 @@ The robot character was not updating to the celebrate animation on the results p
 
 ✅ ETL pipeline — CSV → Python → JSON → Website
 
+
+🤖 Development Note
+
+This project was developed with the assistance of AI tools for code generation. The project concept, dataset selection, feature design, UI decisions, bug identification and debugging were done independently. AI tools were used as a coding assistant, similar to how modern developers use tools like GitHub Copilot in real industry projects. All code has been reviewed and understood by the developer.
+
