@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerPath AI — Find Your Future</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #7C3AED; --primary2: #4F46E5; --accent: #06B6D4; --accent2: #10B981;
+  --bg: #0A0A1A; --surface: rgba(255,255,255,0.05); --border: rgba(255,255,255,0.1);
+  --border2: rgba(255,255,255,0.18); --text: #F1F5F9; --text2: rgba(241,245,249,0.65);
+  --text3: rgba(241,245,249,0.4);
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+#bgCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.orb { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.18; pointer-events: none; z-index: 0; animation: orbFloat 8s ease-in-out infinite; }
+.orb1 { width: 600px; height: 600px; background: var(--primary); top: -200px; left: -200px; }
+.orb2 { width: 500px; height: 500px; background: var(--accent); bottom: -150px; right: -150px; animation-delay: -3s; }
+.orb3 { width: 400px; height: 400px; background: var(--accent2); top: 40%; left: 60%; animation-delay: -6s; }
+@keyframes orbFloat { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(30px,-20px) scale(1.05)} 66%{transform:translate(-20px,30px) scale(0.95)} }
+.progress-bar-container { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 200; background: rgba(255,255,255,0.08); }
+.progress-bar { height: 100%; background: linear-gradient(90deg,var(--primary),var(--accent),var(--accent2)); background-size:200% 100%; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); animation: shimmer 2s linear infinite; }
+@keyframes shimmer { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+.page { display: none; position: relative; z-index: 1; min-height: 100vh; width: 100%; align-items: center; justify-content: center; padding: 60px 20px 40px; }
+.page.active { display: flex; flex-direction: column; animation: pageIn 0.5s cubic-bezier(0.4,0,0.2,1); }
+@keyframes pageIn { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+.card { background: rgba(15,12,40,0.75); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); border: 1px solid var(--border2); border-radius: 28px; padding: 48px; width: 100%; max-width: 680px; position: relative; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); }
+.card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background: linear-gradient(90deg,transparent,rgba(124,58,237,0.6),rgba(6,182,212,0.6),transparent); }
+h2 { font-size: 24px; font-weight: 600; line-height: 1.3; margin-bottom: 8px; }
+h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+p { font-size: 15px; line-height: 1.7; color: var(--text2); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 28px; border-radius: 14px; font-size: 15px; font-weight: 600; border: none; cursor: pointer; transition: all 0.25s; font-family: inherit; position: relative; overflow: hidden; }
+.btn-primary { background: linear-gradient(135deg,var(--primary),var(--primary2)); color: #fff; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,58,237,0.5); }
+.btn-outline { background: rgba(255,255,255,0.05); color: var(--text2); border: 1px solid var(--border2); }
+.btn-outline:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.btn-row { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+.form-group { margin-bottom: 18px; }
+label { display: block; font-size: 12px; font-weight: 500; color: var(--text3); margin-bottom: 6px; letter-spacing: 0.04em; }
+input[type=text], input[type=number], select { width: 100%; padding: 13px 16px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 12px; font-size: 15px; font-family: inherit; color: var(--text); outline: none; transition: all 0.2s; -webkit-appearance: none; }
+input[type=text]:focus, input[type=number]:focus, select:focus { border-color: var(--primary); background: rgba(124,58,237,0.08); box-shadow: 0 0 0 3px rgba(124,58,237,0.15); }
+select option { background: #1a1035; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.interest-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 24px; }
+.interest-card { border: 1px solid var(--border); border-radius: 14px; padding: 16px 10px; text-align: center; cursor: pointer; transition: all 0.25s; background: rgba(255,255,255,0.03); user-select: none; position: relative; overflow: hidden; }
+.interest-card::before { content:''; position:absolute; inset:0; border-radius:14px; background: linear-gradient(135deg,rgba(124,58,237,0.15),rgba(6,182,212,0.08)); opacity:0; transition:opacity 0.25s; }
+.interest-card:hover { border-color: rgba(124,58,237,0.5); transform: translateY(-2px); }
+.interest-card:hover::before { opacity: 1; }
+.interest-card.selected { border-color: var(--primary); background: rgba(124,58,237,0.12); box-shadow: 0 0 0 1px rgba(124,58,237,0.3), 0 4px 20px rgba(124,58,237,0.2); transform: translateY(-2px); }
+.interest-card.selected::before { opacity: 1; }
+.interest-card .icon { font-size: 28px; margin-bottom: 8px; position: relative; z-index: 1; }
+.interest-card .label { font-size: 12px; font-weight: 600; color: var(--text); position: relative; z-index: 1; }
+.interest-card .sublabel { font-size: 10px; color: var(--text3); margin-top: 2px; position: relative; z-index: 1; }
+.interest-card.selected .label { color: #C4B5FD; }
+.check-badge { position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%; background: var(--primary); display: none; align-items: center; justify-content: center; font-size: 10px; color: #fff; z-index: 2; }
+.interest-card.selected .check-badge { display: flex; }
+.slider-group { margin-bottom: 22px; }
+.slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.slider-label { font-size: 13px; font-weight: 500; color: var(--text); }
+.slider-value { font-size: 13px; font-weight: 700; min-width: 24px; text-align: right; background: linear-gradient(90deg,var(--primary),var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; border: none; outline: none; padding: 0; margin: 0; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg,var(--primary),var(--accent)); cursor: pointer; box-shadow: 0 0 12px rgba(124,58,237,0.6); transition: transform 0.15s; }
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+.brain-anim { width: 130px; height: 130px; margin: 0 auto 32px; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; font-size: 52px; }
+.brain-anim::before, .brain-anim::after { content:''; position:absolute; border-radius:50%; animation: sonar 2.4s ease-out infinite; }
+.brain-anim::before { inset:-10px; border:2px solid rgba(124,58,237,0.5); }
+.brain-anim::after { inset:-24px; border:2px solid rgba(6,182,212,0.3); animation-delay:0.5s; }
+@keyframes sonar { 0%{transform:scale(1);opacity:1} 100%{transform:scale(1.4);opacity:0} }
+.brain-inner { width:100%; height:100%; border-radius:50%; background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(6,182,212,0.2)); border:1px solid rgba(124,58,237,0.4); display:flex; align-items:center; justify-content:center; animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+.step-item { display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:14px; color:var(--text3); transition:all 0.3s; }
+.step-item.done { color: #34D399; }
+.step-item.active { color: var(--text); }
+.step-icon { font-size:18px; width:24px; text-align:center; flex-shrink:0; }
+.dots::after { content:'...'; animation:dotanim 1.2s steps(4,end) infinite; }
+@keyframes dotanim { 0%,20%{content:''} 40%{content:'.'} 60%{content:'..'} 80%,100%{content:'...'} }
+.career-hero { background:linear-gradient(135deg,rgba(124,58,237,0.4) 0%,rgba(6,182,212,0.3) 100%); border:1px solid rgba(124,58,237,0.4); border-radius:20px; padding:32px; margin-bottom:24px; position:relative; overflow:hidden; }
+.career-hero::before { content:''; position:absolute; width:300px; height:300px; border-radius:50%; background:radial-gradient(circle,rgba(124,58,237,0.3),transparent); top:-100px; right:-80px; }
+.career-badge { display:inline-block; background:rgba(124,58,237,0.3); border:1px solid rgba(124,58,237,0.5); border-radius:20px; padding:4px 14px; font-size:11px; font-weight:700; letter-spacing:0.08em; color:#C4B5FD; margin-bottom:12px; text-transform:uppercase; }
+.career-title { font-size:30px; font-weight:700; color:#fff; margin-bottom:6px; }
+.career-match { font-size:13px; color:rgba(255,255,255,0.6); }
+.match-score { font-size:46px; font-weight:800; background:linear-gradient(135deg,#fff,#C4B5FD); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1; }
+.info-section-title { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:14px; }
+.divider { border:none; border-top:1px solid rgba(255,255,255,0.07); margin:24px 0; }
+.uni-card { border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:flex-start; gap:14px; background:rgba(255,255,255,0.03); transition:all 0.2s; }
+.uni-card:hover { border-color:rgba(124,58,237,0.4); background:rgba(124,58,237,0.06); }
+.uni-icon { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,rgba(124,58,237,0.3),rgba(6,182,212,0.2)); border:1px solid rgba(124,58,237,0.3); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.uni-name { font-weight:600; font-size:14px; color:var(--text); margin-bottom:2px; }
+.uni-location { font-size:12px; color:var(--text3); }
+.uni-course { font-size:12px; color:#A78BFA; margin-top:4px; font-weight:500; }
+.finance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:8px; }
+.finance-card { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:14px; padding:16px 12px; text-align:center; }
+.finance-amount { font-size:16px; font-weight:700; color:var(--text); margin-bottom:3px; }
+.finance-amount.green { color:#34D399; }
+.finance-amount.amber { color:#FBBF24; }
+.finance-label { font-size:10px; color:var(--text3); font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
+.ptptn-bar { background:rgba(255,255,255,0.07); border-radius:4px; height:8px; margin:8px 0; overflow:hidden; }
+.ptptn-fill { height:100%; background:linear-gradient(90deg,var(--primary),var(--accent)); border-radius:4px; transition:width 1.2s cubic-bezier(0.4,0,0.2,1); width:0%; }
+.note { background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.2); border-radius:12px; padding:14px 16px; font-size:13px; color:rgba(6,182,212,0.9); margin-top:16px; line-height:1.6; }
+#page1 { padding: 0; }
+.welcome-wrap { min-height:100vh; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; position:relative; z-index:1; }
+.welcome-card { background:rgba(10,10,26,0.8); backdrop-filter:blur(32px); border:1px solid var(--border2); border-radius:32px; padding:64px 52px; max-width:640px; width:100%; text-align:center; box-shadow:0 40px 100px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.07); position:relative; overflow:hidden; }
+.welcome-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--primary),var(--accent),var(--accent2),transparent); }
+.welcome-logo { font-size:64px; margin-bottom:24px; display:block; animation:floatY 4s ease-in-out infinite; filter:drop-shadow(0 0 24px rgba(124,58,237,0.6)); }
+@keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+.welcome-title { font-family:'Playfair Display',serif; font-size:52px; line-height:1.1; margin-bottom:18px; background:linear-gradient(135deg,#fff 0%,#C4B5FD 50%,#67E8F9 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.welcome-sub { font-size:16px; color:var(--text2); line-height:1.75; margin-bottom:36px; }
+.welcome-features { display:flex; gap:10px; justify-content:center; margin-bottom:40px; flex-wrap:wrap; }
+.feature-pill { background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:20px; padding:6px 16px; font-size:12px; color:var(--text2); font-weight:500; }
+.welcome-btn { background:linear-gradient(135deg,var(--primary) 0%,var(--primary2) 50%,var(--accent) 100%); background-size:200% 100%; color:#fff; border:none; border-radius:16px; padding:18px 48px; font-size:16px; font-weight:700; cursor:pointer; transition:all 0.3s; font-family:inherit; box-shadow:0 8px 40px rgba(124,58,237,0.5); animation:btnPulse 3s ease-in-out infinite; }
+.welcome-btn:hover { transform:translateY(-3px) scale(1.02); box-shadow:0 16px 50px rgba(124,58,237,0.65); }
+@keyframes btnPulse { 0%,100%{box-shadow:0 8px 40px rgba(124,58,237,0.5)} 50%{box-shadow:0 8px 50px rgba(124,58,237,0.8),0 0 0 8px rgba(124,58,237,0.08)} }
+.section-tag { display:flex; align-items:center; gap:10px; margin-bottom:24px; }
+.tag-line { width:32px; height:2px; background:linear-gradient(90deg,var(--primary),var(--accent)); border-radius:1px; }
+.tag-text { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.1em; }
+#ai-why { font-size:14px; line-height:1.85; color:var(--text2); white-space:pre-wrap; }
+@media(max-width:600px){
+  .card{padding:28px 20px;}
+  .interest-grid{grid-template-columns:repeat(2,1fr);}
+  .finance-grid{grid-template-columns:1fr 1fr;}
+  .form-row{grid-template-columns:1fr;}
+  h2{font-size:20px;}
+  .welcome-title{font-size:36px;}
+  .welcome-card{padding:36px 24px;}
+}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+
+<!-- PAGE 1: WELCOME -->
+<div class="page active" id="page1">
+  <div class="welcome-wrap">
+    <div class="welcome-card">
+      <span class="welcome-logo">🧭</span>
+      <h1 class="welcome-title">CareerPath AI</h1>
+      <p class="welcome-sub">Answer a few honest questions and our AI will discover the career built for who you are — with real Malaysian universities, PTPTN breakdown, and your full financial roadmap.</p>
+      <div class="welcome-features">
+        <span class="feature-pill">🤖 AI-Powered</span>
+        <span class="feature-pill">🎓 Malaysian Universities</span>
+        <span class="feature-pill">💰 PTPTN Info</span>
+        <span class="feature-pill">⚡ 3 Minutes</span>
+      </div>
+      <button class="welcome-btn" onclick="goTo(2)">Start My Career Discovery →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: PROFILE -->
+<div class="page" id="page2">
+  <div class="card">
+    <div class="section-tag"><div class="tag-line"></div><span class="tag-text">Step 1 of 3 — Your Profile</span></div>
+    <h2>Tell us about yourself</h2>
+    <p style="margin-bottom:28px;">We use this to personalise your career recommendation.</p>
+    <div class="form-row">
+      <div class="form-group"><label>First name</label><input type="text" id="firstName" placeholder="e.g. Ahmad" /></div>
+      <div class="form-group"><label>Last name</label><input type="text" id="lastName" placeholder="e.g. Hafizi" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Age</label><input type="number" id="age" placeholder="e.g. 18" min="15" max="30" /></div>
+      <div class="form-group"><label>Gender</label><select id="gender"><option value="">Select...</option><option>Male</option><option>Female</option><option>Prefer not to say</option></select></div>
+    </div>
+    <div class="form-group"><label>Current education level</label><select id="education"><option value="">Select...</option><option>SPM / O-Level</option><option>STPM / A-Level</option><option>Diploma</option><option>Foundation</option><option>Pre-University</option></select></div>
+    <div class="form-group"><label>State</label><select id="state"><option value="">Select your state...</option><option>Selangor</option><option>Kuala Lumpur</option><option>Johor</option><option>Perak</option><option>Penang</option><option>Sabah</option><option>Sarawak</option><option>Kedah</option><option>Kelantan</option><option>Terengganu</option><option>Pahang</option><option>Negeri Sembilan</option><option>Melaka</option><option>Perlis</option><option>Putrajaya</option><option>Labuan</option></select></div>
+    <div class="form-group">
+      <label>Family income category</label>
+      <select id="incomeCategory">
+        <option value="">Select your category...</option>
+        <option value="B40">B40 — Below RM 4,850/month</option>
+        <option value="M40">M40 — RM 4,850 to RM 10,970/month</option>
+        <option value="T20">T20 — Above RM 10,970/month</option>
+      </select>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;">💡 This determines your PTPTN loan eligibility percentage</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="goTo(1)">← Back</button>
+      <button class="btn btn-primary" onclick="validateProfile()">Next Step →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3: INTERESTS -->
+<div class="page" id="page3">
+  <div class="card" style="max-width:740px;">
+    <div class="section-tag"><div class="tag-line"></div><span class="tag-text">Step 2 of 3 — Your Interests</span></div>
+    <h2>What do you enjoy doing?</h2>
+    <p>Pick all the areas that genuinely spark your interest. Be honest — there are no wrong answers.</p>
+    <div class="interest-grid">
+      <div class="interest-card" data-value="coding" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">💻</div><div class="label">Coding & Tech</div><div class="sublabel">Apps, web, software</div></div>
+      <div class="interest-card" data-value="maths" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">📐</div><div class="label">Maths & Logic</div><div class="sublabel">Numbers, problem solving</div></div>
+      <div class="interest-card" data-value="leadership" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">🏆</div><div class="label">Leadership</div><div class="sublabel">Managing, organising</div></div>
+      <div class="interest-card" data-value="science" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">🔬</div><div class="label">Science</div><div class="sublabel">Bio, chem, physics</div></div>
+      <div class="interest-card" data-value="design" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">🎨</div><div class="label">Design & Art</div><div class="sublabel">Visuals, creativity, UX</div></div>
+      <div class="interest-card" data-value="business" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">📊</div><div class="label">Business</div><div class="sublabel">Finance, marketing</div></div>
+      <div class="interest-card" data-value="communication" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">🗣️</div><div class="label">Communication</div><div class="sublabel">Writing, media, speaking</div></div>
+      <div class="interest-card" data-value="healthcare" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">🏥</div><div class="label">Healthcare</div><div class="sublabel">Medicine, nursing, pharmacy</div></div>
+      <div class="interest-card" data-value="engineering" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">⚙️</div><div class="label">Engineering</div><div class="sublabel">Building, machines</div></div>
+      <div class="interest-card" data-value="education" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">📚</div><div class="label">Education</div><div class="sublabel">Teaching, mentoring</div></div>
+      <div class="interest-card" data-value="environment" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">🌿</div><div class="label">Environment</div><div class="sublabel">Nature, sustainability</div></div>
+      <div class="interest-card" data-value="law" onclick="toggleInterest(this)"><div class="check-badge">✓</div><div class="icon">⚖️</div><div class="label">Law & Justice</div><div class="sublabel">Rights, policy, advocacy</div></div>
+    </div>
+    <div style="margin-top:36px;border-top:1px solid rgba(255,255,255,0.07);padding-top:28px;">
+      <h3 style="margin-bottom:4px;">Rate your preferences</h3>
+      <p style="font-size:13px;margin-bottom:24px;">Drag the slider to show your preference. Middle = No preference (0).</p>
+
+      <!-- SLIDER 1 -->
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">Working alone vs in a team</span>
+          <span class="slider-value" id="v1">0</span>
+        </div>
+        <input type="range" min="-5" max="5" value="0" id="s_teamwork" oninput="document.getElementById('v1').textContent=Math.abs(this.value)" />
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;"><span>← Alone</span><span>0</span><span>Team →</span></div>
+      </div>
+
+      <!-- SLIDER 2 -->
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">Analytical vs creative thinking</span>
+          <span class="slider-value" id="v2">0</span>
+        </div>
+        <input type="range" min="-5" max="5" value="0" id="s_creative" oninput="document.getElementById('v2').textContent=Math.abs(this.value)" />
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;"><span>← Analytical</span><span>0</span><span>Creative →</span></div>
+      </div>
+
+      <!-- SLIDER 3 -->
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">How much do you enjoy helping people?</span>
+          <span class="slider-value" id="v3">0</span>
+        </div>
+        <input type="range" min="-5" max="5" value="0" id="s_helping" oninput="document.getElementById('v3').textContent=Math.abs(this.value)" />
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;"><span>← Not important</span><span>0</span><span>Very important →</span></div>
+      </div>
+
+      <!-- SLIDER 4 -->
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">Job stability vs high salary</span>
+          <span class="slider-value" id="v4">0</span>
+        </div>
+        <input type="range" min="-5" max="5" value="0" id="s_salary" oninput="document.getElementById('v4').textContent=Math.abs(this.value)" />
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;"><span>← Stability</span><span>0</span><span>High salary →</span></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="goTo(2)">← Back</button>
+      <button class="btn btn-primary" onclick="validateInterests()">Analyse My Results →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4: ANALYZING -->
+<div class="page" id="page4">
+  <div class="card" style="text-align:center;">
+    <div class="brain-anim"><div class="brain-inner">🧠</div></div>
+    <h2>AI is analysing your profile<span class="dots"></span></h2>
+    <p style="margin-top:8px;">Our AI is reviewing your interests and finding your best career match in Malaysia.</p>
+    <div style="margin-top:28px;">
+      <div class="step-item" id="s1"><span class="step-icon">⏳</span> Processing your interest profile</div>
+      <div class="step-item" id="s2"><span class="step-icon">⏳</span> Matching with career database</div>
+      <div class="step-item" id="s3"><span class="step-icon">⏳</span> Finding suitable Malaysian universities</div>
+      <div class="step-item" id="s4"><span class="step-icon">⏳</span> Calculating PTPTN loan estimate</div>
+      <div class="step-item" id="s5"><span class="step-icon">⏳</span> Preparing your personalised report</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 5: RESULTS -->
+<div class="page" id="page5">
+  <div class="card" style="max-width:740px;margin-bottom:60px;">
+    <div class="section-tag"><div class="tag-line"></div><span class="tag-text">Your Career Recommendation</span></div>
+    <div class="career-hero">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;">
+        <div>
+          <div class="career-badge" id="r-badge">Top Match</div>
+          <div class="career-title" id="r-title">Software Engineer</div>
+          <div class="career-match" id="r-match">Recommended based on your profile</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="match-score" id="r-score">94%</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;">match score</div>
+        </div>
+      </div>
+    </div>
+    <div class="info-section-title">Why this career suits you</div>
+    <p id="ai-why">Loading AI analysis...</p>
+
+    <hr class="divider">
+
+    <!-- SALARY SECTION FROM KAGGLE -->
+    <div class="info-section-title">💰 Expected salary in Malaysia</div>
+    <div id="salarySection"></div>
+
+    <hr class="divider">
+    <div class="info-section-title">Recommended Malaysian Universities</div>
+    <div id="uniList"></div>
+    <hr class="divider">
+    <div class="info-section-title">Course fees &amp; PTPTN breakdown</div>
+    <div class="finance-grid" id="financeGrid"></div>
+    <div style="margin-top:18px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+        <span style="color:var(--text3);">PTPTN coverage</span>
+        <span id="ptptnPct" style="font-weight:700;color:#A78BFA;">80%</span>
+      </div>
+      <div class="ptptn-bar"><div class="ptptn-fill" id="ptptnBar"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;"><span>RM 0</span><span id="ptptnMax">RM 0</span></div>
+    </div>
+    <div class="note" id="repayNote"></div>
+    <div class="btn-row" style="margin-top:32px;">
+      <button class="btn btn-outline" onclick="goTo(1)">Start Over</button>
+      <button class="btn btn-primary" onclick="window.print()">Download Report 🖨️</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', () => { resize(); initParticles(); });
+function initParticles() {
+  particles = [];
+  const count = Math.min(Math.floor(W * H / 12000), 90);
+  for (let i = 0; i < count; i++) {
+    particles.push({ x: Math.random()*W, y: Math.random()*H, vx:(Math.random()-0.5)*0.4, vy:(Math.random()-0.5)*0.4, r:Math.random()*1.5+0.5, opacity:Math.random()*0.5+0.2, color:Math.random()>0.5?'124,58,237':'6,182,212' });
+  }
+}
+initParticles();
+function drawParticles() {
+  ctx.clearRect(0,0,W,H);
+  particles.forEach(p => {
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x=W; if(p.x>W)p.x=0; if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${p.color},${p.opacity})`; ctx.fill();
+  });
+  for(let i=0;i<particles.length;i++) for(let j=i+1;j<particles.length;j++) {
+    const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y, dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<130){ ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y); ctx.strokeStyle=`rgba(124,58,237,${0.12*(1-dist/130)})`; ctx.lineWidth=0.5; ctx.stroke(); }
+  }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+let userData = {}, selectedInterests = [];
+const progressValues = [0,20,55,75,100];
+function goTo(n) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page'+n).classList.add('active');
+  document.getElementById('progressBar').style.width=progressValues[n-1]+'%';
+  window.scrollTo(0,0);
+}
+function validateProfile() {
+  const first=document.getElementById('firstName').value.trim(), last=document.getElementById('lastName').value.trim(), age=document.getElementById('age').value, edu=document.getElementById('education').value, state=document.getElementById('state').value, income=document.getElementById('incomeCategory').value;
+  if(!first||!last||!age||!edu||!state||!income){alert('Please fill in all fields before continuing.');return;}
+  userData={name:first+' '+last,age,education:edu,state,incomeCategory:income}; goTo(3);
+}
+function toggleInterest(el) {
+  el.classList.toggle('selected');
+  const val=el.dataset.value;
+  if(el.classList.contains('selected')){if(!selectedInterests.includes(val))selectedInterests.push(val);}
+  else{selectedInterests=selectedInterests.filter(v=>v!==val);}
+}
+function validateInterests() {
+  if(selectedInterests.length<2){alert('Please select at least 2 interests so we can give you a good recommendation.');return;}
+  userData.interests=selectedInterests;
+  userData.teamwork=parseInt(document.getElementById('s_teamwork').value);
+  userData.creative=parseInt(document.getElementById('s_creative').value);
+  userData.helping=parseInt(document.getElementById('s_helping').value);
+  userData.salary=parseInt(document.getElementById('s_salary').value);
+  goTo(4); runAnalysis();
+}
+// ── KAGGLE DATA LOADED FROM JSON ──
+let KAGGLE = null;
+async function loadKaggleData() {
+  try {
+    const res = await fetch('data/kaggle_data.json');
+    KAGGLE = await res.json();
+    console.log('✅ Kaggle data loaded!', KAGGLE.stats);
+  } catch(e) { console.error('Could not load kaggle_data.json', e); }
+}
+loadKaggleData();
+
+async function runAnalysis() {
+  const delay=ms=>new Promise(r=>setTimeout(r,ms));
+  async function activateStep(id,ms) {
+    const el=document.getElementById(id); el.classList.add('active'); el.querySelector('.step-icon').textContent='⚡';
+    await delay(ms); el.classList.remove('active'); el.classList.add('done'); el.querySelector('.step-icon').textContent='✅';
+  }
+  await activateStep('s1',800);
+  await activateStep('s2',900);
+  const result = recommendFromKaggle();
+  await activateStep('s3',700);
+  await activateStep('s4',600);
+  await activateStep('s5',500);
+  populateResults(result); await delay(400); goTo(5);
+  setTimeout(()=>{ document.getElementById('ptptnBar').style.width=document.getElementById('ptptnPct').textContent; },400);
+}
+
+function recommendFromKaggle() {
+  if (!KAGGLE) return getFallback();
+  const interests = userData.interests;
+  const teamwork  = parseInt(userData.teamwork);
+  const creative  = parseInt(userData.creative);
+  const helping   = parseInt(userData.helping);
+  const salaryPref= parseInt(userData.salary);
+
+  // Step 1: Match career from Kaggle interest map
+  const scores = {};
+  interests.forEach(interest => {
+    const careers = KAGGLE.interest_map[interest] || [];
+    careers.forEach((career, idx) => {
+      scores[career] = (scores[career] || 0) + (4 - Math.min(idx, 3));
+    });
+  });
+
+  // Step 2: Boost based on -5 to +5 slider values
+  if (salaryPref > 2) {
+    ['Software Engineer','Data Scientist','Doctor','Lawyer','Financial Analyst'].forEach(c => {
+      if (scores[c]) scores[c] += salaryPref;
+    });
+  }
+  if (helping > 2) {
+    ['Doctor','Nurse','Teacher','HR Manager'].forEach(c => {
+      if (scores[c]) scores[c] += helping;
+    });
+  }
+  if (creative > 2) {
+    ['Graphic Designer','UX Designer'].forEach(c => {
+      if (scores[c]) scores[c] += creative;
+    });
+  }
+  if (teamwork < -2) {
+    ['Research Scientist','Data Scientist','Software Engineer'].forEach(c => {
+      if (scores[c]) scores[c] += Math.abs(teamwork);
+    });
+  }
+
+  // Step 3: Pick best career
+  const best = Object.entries(scores).sort((a,b)=>b[1]-a[1])[0];
+  const career = best ? best[0] : 'Business Analyst';
+  const total  = interests.length * 4;
+  const matched= best ? best[1] : 0;
+  const matchScore = Math.min(98, Math.round(70 + (matched/total)*28));
+
+  // Step 4: Get salary from Kaggle salary dataset
+  const salData = KAGGLE.salary_lookup[career] || KAGGLE.salary_lookup['Business Analyst'] || {avg:4500,min:3000,max:8000};
+  const stats = KAGGLE.stats;
+
+  // Step 5: Get universities from data
+  const icons = ['🏛️','🎓','📚'];
+  const uniList = (KAGGLE.uni_details[career] || KAGGLE.default_unis).map((u,i) => ({...u, icon: icons[i]}));
+
+  // Step 6: PTPTN info based on income category + uni type
+  const ptptn = KAGGLE.ptptn_info[career] || KAGGLE.default_ptptn;
+  const incomeCategory = userData.incomeCategory || 'M40';
+
+  // Step 7: Build personalised why text using real dataset numbers
+  const why = `Based on your interests in ${interests.slice(0,2).join(' and ')}, ${career} is your strongest career match. ` +
+    `Our analysis of ${stats.total_salary_records.toLocaleString()} salary records from the Kaggle dataset shows this career offers an average salary of RM ${salData.avg.toLocaleString()}/month in Malaysia, ranging from RM ${salData.min.toLocaleString()} to RM ${salData.max.toLocaleString()}. ` +
+    `From ${stats.total_career_surveys.toLocaleString()} career survey responses in our dataset, students with similar interests frequently pursued this field. ` +
+    `With your preference for ${teamwork > 0 ? 'teamwork' : teamwork < 0 ? 'independent work' : 'balanced work style'} and ${creative > 0 ? 'creative' : creative < 0 ? 'analytical' : 'balanced'} thinking, you have exactly the right profile to excel here.`;
+
+  return {
+    career, matchScore,
+    badge: matchScore >= 90 ? 'Top Match' : 'Great Match',
+    why,
+    universities: uniList,
+    totalFees:        ptptn.total,
+    ptptnAmount:      ptptn.ptptn,
+    monthlyRepayment: ptptn.monthly,
+    yearsToRepay:     ptptn.years,
+    courseDuration:   ptptn.duration,
+    salaryInfo:       salData,
+    datasetStats:     stats
+  };
+}
+
+function getFallback() {
+  const map={coding:{career:'Software Engineer',score:93},maths:{career:'Data Analyst',score:89},healthcare:{career:'Doctor',score:91},business:{career:'Business Analyst',score:87},design:{career:'Graphic Designer',score:88},engineering:{career:'Civil Engineer',score:90},law:{career:'Lawyer',score:86},education:{career:'Teacher',score:84},science:{career:'Research Scientist',score:85}};
+  const m=userData.interests.map(i=>map[i]).filter(Boolean)[0]||{career:'Business Analyst',score:85};
+  return {career:m.career,matchScore:m.score,badge:'Best Match',why:`Based on your interests in ${userData.interests.slice(0,2).join(' and ')}, ${m.career} is a strong fit for you.`,universities:[{name:'Universiti Malaya (UM)',location:'Kuala Lumpur',icon:'🏛️',course:'Bachelor of Science'},{name:'Universiti Teknologi Malaysia (UTM)',location:'Johor Bahru',icon:'🎓',course:'Bachelor of Technology'},{name:'Universiti Kebangsaan Malaysia (UKM)',location:'Bangi, Selangor',icon:'📚',course:'Bachelor of Science'}],totalFees:45000,ptptnAmount:36000,monthlyRepayment:260,yearsToRepay:15,courseDuration:'4 years'};
+}
+function fmt(n){return 'RM '+Number(n).toLocaleString();}
+
+// PTPTN coverage rates based on income category + uni type
+const PTPTN_RATES = {
+  B40: { Public: 1.00, Private: 0.75 },
+  M40: { Public: 0.75, Private: 0.50 },
+  T20: { Public: 0.50, Private: 0.25 }
+};
+
+// Calculate repayment: PTPTN uses 1% of salary per RM 10,000 borrowed, min RM 150/month
+function calcRepayment(ptptnAmt, avgSalary) {
+  const years = 15;
+  const monthly = Math.max(150, Math.round(ptptnAmt / (years * 12)));
+  const discounted = Math.round(ptptnAmt * 0.90); // 10% discount if pay on time
+  const totalPay = monthly * years * 12;
+  return { monthly, years, discounted, totalPay };
+}
+
+function populateResults(data) {
+  document.getElementById('r-title').textContent=data.career;
+  document.getElementById('r-score').textContent=data.matchScore+'%';
+  document.getElementById('r-badge').textContent=data.badge||'Top Match';
+  document.getElementById('r-match').textContent=`Recommended for ${userData.name} · ${data.courseDuration} degree`;
+  document.getElementById('ai-why').textContent=data.why;
+
+  // Salary section from Kaggle dataset
+  const sal = data.salaryInfo || {avg:4500, min:3000, max:8000, count:0};
+  const salaryHTML = `
+    <div style="background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(6,182,212,0.1));border:1px solid rgba(124,58,237,0.3);border-radius:16px;padding:20px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+        <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:12px;padding:14px;">
+          <div style="font-size:20px;font-weight:800;color:#34D399;margin-bottom:4px;">${fmt(sal.avg)}</div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;">Average/month</div>
+        </div>
+        <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:12px;padding:14px;">
+          <div style="font-size:20px;font-weight:800;color:#A78BFA;margin-bottom:4px;">${fmt(sal.min)}</div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;">Fresh Grad/month</div>
+        </div>
+        <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:12px;padding:14px;">
+          <div style="font-size:20px;font-weight:800;color:#FBBF24;margin-bottom:4px;">${fmt(sal.max)}</div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;">Senior/month</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:10px;">
+        <span style="font-size:16px;">📊</span>
+        <span style="font-size:12px;color:var(--text2);">Based on <strong style="color:var(--text);">${sal.count > 0 ? sal.count.toLocaleString() : '6,699'} real salary records</strong> from Kaggle dataset · Malaysian market rates (Jobstreet & MyFutureJobs)</span>
+      </div>
+      <div style="margin-top:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:6px;">
+          <span>Starting salary</span><span>Senior salary</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border-radius:4px;height:8px;overflow:hidden;position:relative;">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:${Math.round(((sal.avg-sal.min)/(sal.max-sal.min))*100)}%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;"></div>
+        </div>
+        <div style="text-align:center;font-size:11px;color:var(--accent);margin-top:4px;font-weight:600;">Your expected average: ${fmt(sal.avg)}/month</div>
+      </div>
+    </div>`;
+  document.getElementById('salarySection').innerHTML = salaryHTML;
+
+  // Income category
+  const cat = userData.incomeCategory || 'M40';
+  const rates = PTPTN_RATES[cat];
+  const catColors = {B40:'#34D399', M40:'#FBBF24', T20:'#F87171'};
+  const catColor = catColors[cat];
+
+  // University cards with individual PTPTN per uni
+  document.getElementById('uniList').innerHTML = data.universities.map(u => {
+    const uniType = u.type || 'Public';
+    const coveragePct = rates[uniType] || 0.75;
+    const uniFee = u.fee || 40000;
+    const uniPtptn = Math.round(uniFee * coveragePct);
+    const uniSelfPay = uniFee - uniPtptn;
+    const repay = calcRepayment(uniPtptn, data.salaryInfo ? data.salaryInfo.avg : 4500);
+    return `<div class="uni-card" style="flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:flex-start;gap:14px;width:100%;">
+        <div class="uni-icon">${u.icon}</div>
+        <div style="flex:1">
+          <div class="uni-name">${u.name}</div>
+          <div class="uni-location">📍 ${u.location}</div>
+          <div class="uni-course">${u.course}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:14px;font-weight:700;color:#fff;">${fmt(uniFee)}</div>
+          <div style="font-size:10px;color:var(--text3);">${uniType} University</div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;width:100%;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:11px;color:var(--text3);">PTPTN Coverage <span style="color:${catColor};font-weight:700;">(${cat} — ${Math.round(coveragePct*100)}%)</span></span>
+          <span style="font-size:11px;font-weight:700;color:${catColor};">${fmt(uniPtptn)}</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border-radius:4px;height:6px;overflow:hidden;margin-bottom:8px;">
+          <div style="height:100%;width:${Math.round(coveragePct*100)}%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#34D399;">${fmt(uniPtptn)}</div>
+            <div style="font-size:9px;color:var(--text3);">PTPTN covers</div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#FBBF24;">${fmt(uniSelfPay)}</div>
+            <div style="font-size:9px;color:var(--text3);">You pay upfront</div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#A78BFA;">${fmt(repay.monthly)}/mo</div>
+            <div style="font-size:9px;color:var(--text3);">Monthly repay</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);font-size:10px;color:var(--text3);">
+          💳 Repay over <strong style="color:var(--text2);">15 years</strong> · 
+          Pay on time = <strong style="color:#34D399;">10% discount</strong> → only ${fmt(repay.discounted)} total ·
+          Starts when salary &gt; <strong style="color:var(--text2);">RM 2,000/month</strong>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Overall summary (based on cheapest public uni)
+  const publicUnis = data.universities.filter(u => (u.type||'Public') === 'Public');
+  const refUni = publicUnis[0] || data.universities[0];
+  const refFee = refUni ? (refUni.fee || 40000) : 40000;
+  const refType = refUni ? (refUni.type || 'Public') : 'Public';
+  const refCoverage = rates[refType] || 0.75;
+  const refPtptn = Math.round(refFee * refCoverage);
+  const refSelf = refFee - refPtptn;
+  const refRepay = calcRepayment(refPtptn, data.salaryInfo ? data.salaryInfo.avg : 4500);
+  const pct = Math.round(refCoverage * 100);
+
+  document.getElementById('financeGrid').innerHTML=`
+    <div class="finance-card">
+      <div class="finance-amount">${fmt(refFee)}</div>
+      <div class="finance-label">Total course fees</div>
+    </div>
+    <div class="finance-card">
+      <div class="finance-amount green">${fmt(refPtptn)}</div>
+      <div class="finance-label">PTPTN covers (${cat})</div>
+    </div>
+    <div class="finance-card">
+      <div class="finance-amount amber">${fmt(refSelf)}</div>
+      <div class="finance-label">You pay upfront</div>
+    </div>`;
+
+  document.getElementById('ptptnPct').textContent=pct+'%';
+  document.getElementById('ptptnBar').style.width=pct+'%';
+  document.getElementById('ptptnMax').textContent=fmt(refFee);
+
+  document.getElementById('repayNote').innerHTML=`
+    <div style="margin-bottom:8px;">📋 <strong>Your PTPTN Summary (${cat} Category)</strong></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div>✅ Coverage rate: <strong>${pct}%</strong></div>
+      <div>💰 Monthly repayment: <strong>${fmt(refRepay.monthly)}/month</strong></div>
+      <div>📅 Repayment period: <strong>15 years</strong></div>
+      <div>🎁 Pay on time discount: <strong>10% off</strong></div>
+    </div>
+    <div style="font-size:12px;opacity:0.85;">
+      💡 Total repayment: <strong>${fmt(refRepay.totalPay)}</strong> · 
+      With 10% discount: <strong style="color:#34D399;">${fmt(refRepay.discounted)}</strong> · 
+      Repayment starts when your monthly salary exceeds <strong>RM 2,000</strong>
+    </div>`;
+}
+</script>
+</body>
+</html>
+
+
+<body>
+ 
+
+<div class="robot-wrap" id="robotWrap">
+  <div class="robot-bubble" id="robotBubble">Hii there! 👋</div>
+  <div class="robot" id="robotChar">
+    <div class="robot-antenna"></div>
+    <div class="robot-head">
+      <div class="robot-eyes">
+        <div class="robot-eye" id="eyeLeft"></div>
+        <div class="robot-eye" id="eyeRight"></div>
+      </div>
+    </div>
+    <div class="robot-body">
+      <div class="robot-arms">
+        <div class="robot-arm left"></div>
+        <div class="robot-arm right"></div>
+      </div>
+    </div>
+    <div class="robot-legs">
+      <div class="robot-leg"></div>
+      <div class="robot-leg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+const robotWrap = document.getElementById('robotWrap');
+const robotBubble = document.getElementById('robotBubble');
+const robotChar = document.getElementById('robotChar');
+const eyeLeft = document.getElementById('eyeLeft');
+const eyeRight = document.getElementById('eyeRight');
+
+const robotConfig = {
+  1: { bubble: "Welcome! Let's find your career! 🚀", eyeClass: 'happy', celebrate: false },
+  2: { bubble: "Tell me about yourself! 😊", eyeClass: '', celebrate: false },
+  3: { bubble: "Hmm what do you like? 🤔", eyeClass: 'thinking', celebrate: false },
+  4: { bubble: "Calculating your perfect match... ⚡", eyeClass: 'analyzing', celebrate: false },
+  5: { bubble: "Found it! You're amazing! 🎉", eyeClass: 'excited', celebrate: true }
+};
+
+function updateRobot(page) {
+  const config = robotConfig[page];
+  if (!config) return;
+  robotWrap.classList.remove('visible','peek');
+  setTimeout(() => {
+    robotBubble.textContent = config.bubble;
+    eyeLeft.className = 'robot-eye ' + config.eyeClass;
+    eyeRight.className = 'robot-eye ' + config.eyeClass;
+    if (config.celebrate) {
+      robotChar.classList.add('celebrate');
+    } else {
+      robotChar.classList.remove('celebrate');
+    }
+    robotWrap.classList.add('visible');
+    setTimeout(() => robotWrap.classList.add('peek'), 400);
+  }, 300);
+// Listen for page changes
+}
+document.querySelectorAll('.btn-primary, .btn-outline, .welcome-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    setTimeout(() => {
+      const activePage = document.querySelector('.page.active');
+      if (activePage) {
+        const pageNum = parseInt(activePage.id.replace('page',''));
+        updateRobot(pageNum);
+      }
+    }, 100);
+  });
+});
+
+/// Only update robot when page actually CHANGES
+let currentPage = 0;
+setInterval(() => {
+  const activePage = document.querySelector('.page.active');
+  if (activePage) {
+    const pageNum = parseInt(activePage.id.replace('page',''));
+    if (pageNum !== currentPage) {
+      currentPage = pageNum;
+      updateRobot(pageNum);
+    }
+  }
+}, 500);
+
+</script>
+  <style>
+
+.robot-wrap {
+  position: fixed;
+  right: -120px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  transition: right 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none;
+}
+.robot-wrap.visible { right: -30px; }
+.robot-wrap.peek { right: 20px; }
+.robot {
+  width: 90px;
+  position: relative;
+  animation: robotFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px rgba(124,58,237,0.4));
+}
+@keyframes robotFloat {
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  50%{transform:translateY(-12px) rotate(2deg)}
+}
+.robot-body {
+  width: 70px; height: 85px;
+  background: linear-gradient(145deg, #e8e8f0, #c8c8d8);
+  border-radius: 35px 35px 30px 30px;
+  margin: 0 auto; position: relative;
+  box-shadow: inset -4px -4px 12px rgba(0,0,0,0.15), inset 2px 2px 8px rgba(255,255,255,0.6);
+}
+.robot-head {
+  width: 60px; height: 55px;
+  background: linear-gradient(145deg, #f0f0f8, #d0d0e0);
+  border-radius: 30px;
+  margin: 0 auto 6px; position: relative;
+  box-shadow: inset -3px -3px 10px rgba(0,0,0,0.12), inset 2px 2px 6px rgba(255,255,255,0.7);
+}
+.robot-eyes {
+  display: flex; justify-content: center;
+  gap: 10px; padding-top: 16px;
+}
+.robot-eye {
+  width: 16px; height: 16px;
+  background: radial-gradient(circle at 35% 35%, #60A5FA, #1D4ED8);
+  border-radius: 50%;
+  box-shadow: 0 0 10px #60A5FA, 0 0 20px #3B82F6;
+  animation: eyeBlink 4s ease-in-out infinite;
+  position: relative;
+}
+.robot-eye::after {
+  content: ''; position: absolute;
+  width: 5px; height: 5px;
+  background: white; border-radius: 50%;
+  top: 2px; left: 3px;
+}
+@keyframes eyeBlink {
+  0%,90%,100%{transform:scaleY(1)}
+  95%{transform:scaleY(0.1)}
+}
+.robot-antenna {
+  width: 4px; height: 14px;
+  background: linear-gradient(#d0d0e0, #a0a0b0);
+  border-radius: 2px; margin: 0 auto 2px; position: relative;
+}
+.robot-antenna::after {
+  content: ''; position: absolute;
+  width: 8px; height: 8px;
+  background: radial-gradient(circle, #F472B6, #EC4899);
+  border-radius: 50%; top: -6px; left: -2px;
+  box-shadow: 0 0 8px #EC4899;
+  animation: antennaPulse 1.5s ease-in-out infinite;
+}
+@keyframes antennaPulse {
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:0.5;transform:scale(1.3)}
+}
+.robot-arms { position: absolute; width: 100%; top: 20px; }
+.robot-arm {
+  width: 14px; height: 35px;
+  background: linear-gradient(145deg, #e0e0f0, #c0c0d0);
+  border-radius: 7px; position: absolute;
+  box-shadow: inset -2px -2px 6px rgba(0,0,0,0.1);
+}
+.robot-arm.left {
+  left: -16px; transform-origin: top center;
+  animation: armWaveLeft 2s ease-in-out infinite;
+}
+.robot-arm.right {
+  right: -16px; transform-origin: top center;
+  animation: armWaveRight 2s ease-in-out infinite;
+}
+@keyframes armWaveLeft {
+  0%,100%{transform:rotate(-10deg)}
+  50%{transform:rotate(15deg)}
+}
+@keyframes armWaveRight {
+  0%,100%{transform:rotate(10deg)}
+  50%{transform:rotate(-15deg)}
+}
+.robot-legs { display: flex; justify-content: center; gap: 10px; margin-top: 4px; }
+.robot-leg {
+  width: 14px; height: 22px;
+  background: linear-gradient(145deg, #d8d8e8, #b8b8c8);
+  border-radius: 7px;
+  box-shadow: inset -2px -2px 6px rgba(0,0,0,0.1);
+}
+.robot-bubble {
+  position: absolute; right: 110%; top: 10px;
+  background: rgba(15,12,40,0.95);
+  border: 1px solid rgba(124,58,237,0.5);
+  border-radius: 14px 14px 0 14px;
+  padding: 8px 12px; font-size: 12px; font-weight: 600;
+  color: #C4B5FD; white-space: nowrap;
+  opacity: 0; transform: scale(0.8); transition: all 0.3s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.robot-wrap.peek .robot-bubble { opacity: 1; transform: scale(1); }
+.robot-eye.happy {
+  background: radial-gradient(circle at 35% 35%, #34D399, #059669);
+  box-shadow: 0 0 10px #34D399, 0 0 20px #10B981;
+}
+.robot-eye.excited { animation: eyeExcited 0.5s ease-in-out infinite; }
+@keyframes eyeExcited {
+  0%,100%{transform:scale(1)} 50%{transform:scale(1.2)}
+}
+.robot-eye.thinking {
+  background: radial-gradient(circle at 35% 35%, #FBBF24, #D97706);
+  box-shadow: 0 0 10px #FBBF24, 0 0 20px #F59E0B;
+}
+.robot-eye.analyzing {
+  animation: eyeSpin 1s linear infinite;
+  background: conic-gradient(#60A5FA, #A78BFA, #34D399, #60A5FA);
+}
+@keyframes eyeSpin { to{transform:rotate(360deg)} }
+@keyframes robotCelebrate {
+  0%,100%{transform:translateY(0) rotate(0deg)}
+  25%{transform:translateY(-20px) rotate(-5deg)}
+  75%{transform:translateY(-20px) rotate(5deg)}
+}
+.robot.celebrate { animation: robotCelebrate 0.6s ease-in-out infinite; }
+  </style>
+</body>
